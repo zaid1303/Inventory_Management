@@ -17,9 +17,12 @@ export async function GET() {
     
     inventoryItems.forEach((inv: any) => {
       const sku = inv.sku_id;
-      totalValue += sku.unit_price * inv.quantity;
-      if (inv.quantity <= sku.reorder_level) {
-        lowStockItems++;
+      // Check if SKU exists (might be deleted)
+      if (sku && sku.unit_price !== undefined) {
+        totalValue += sku.unit_price * inv.quantity;
+        if (inv.quantity <= sku.reorder_level) {
+          lowStockItems++;
+        }
       }
     });
     
@@ -43,7 +46,11 @@ export async function GET() {
         }).populate('sku_id');
         
         const catValue = catInventory.reduce((sum: number, inv: any) => {
-          return sum + (inv.sku_id.unit_price * inv.quantity);
+          // Check if SKU exists
+          if (inv.sku_id && inv.sku_id.unit_price !== undefined) {
+            return sum + (inv.sku_id.unit_price * inv.quantity);
+          }
+          return sum;
         }, 0);
         
         return {

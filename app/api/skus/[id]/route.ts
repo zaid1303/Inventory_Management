@@ -1,14 +1,17 @@
 import { NextResponse } from 'next/server';
 import connectDB from '@/app/lib/mongodb';
 import SKU from '@/app/models/SKU';
+import Inventory from '@/app/models/Inventory';
+import StockMovement from '@/app/models/StockMovement';
 
 export async function GET(
   request: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     await connectDB();
-    const sku = await SKU.findById(params.id);
+    const { id } = await params;
+    const sku = await SKU.findById(id);
     
     if (!sku) {
       return NextResponse.json({ error: 'SKU not found' }, { status: 404 });
@@ -23,14 +26,15 @@ export async function GET(
 
 export async function PUT(
   request: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     await connectDB();
+    const { id } = await params;
     const body = await request.json();
     
     const updatedSKU = await SKU.findByIdAndUpdate(
-      params.id,
+      id,
       body,
       { new: true, runValidators: true }
     );
@@ -48,15 +52,24 @@ export async function PUT(
 
 export async function DELETE(
   request: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     await connectDB();
-    const deletedSKU = await SKU.findByIdAndDelete(params.id);
+    const { id } = await params;
+    
+    // Delete the SKU
+    const deletedSKU = await SKU.findByIdAndDelete(id);
     
     if (!deletedSKU) {
       return NextResponse.json({ error: 'SKU not found' }, { status: 404 });
     }
+    
+    // Delete all related inventory records
+    await Inventory.deleteMany({ sku_id: id });
+    
+    // Optionally: Delete all related stock movements
+    await StockMovement.deleteMany({ sku_id: id });
     
     return new Response(null, { status: 204 });
   } catch (error) {

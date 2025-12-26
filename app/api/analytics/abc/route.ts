@@ -9,6 +9,7 @@ export async function GET() {
     const inventoryItems = await Inventory.find({}).populate('sku_id');
     
     const inventoryWithValue = inventoryItems
+      .filter((inv: any) => inv.sku_id !== null) // Filter out items with deleted SKUs
       .map((inv: any) => ({
         sku_id: inv.sku_id._id,
         sku_name: inv.sku_id.name,
@@ -20,6 +21,11 @@ export async function GET() {
       .sort((a, b) => b.value - a.value);
     
     const totalValue = inventoryWithValue.reduce((sum, item) => sum + item.value, 0);
+    
+    if (totalValue === 0) {
+      return NextResponse.json([]);
+    }
+    
     let cumulativeValue = 0;
     
     const abcAnalysis = inventoryWithValue.map(item => {
