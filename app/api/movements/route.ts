@@ -1,41 +1,81 @@
-import { stockMovements, skus, updateInventory } from '../db';
-import { v4 as uuidv4 } from 'uuid';
 import { NextResponse } from 'next/server';
+import connectDB from '@/app/lib/mongodb';
+import StockMovement from '@/app/models/StockMovement';
+import Inventory from '@/app/models/Inventory';
+import SKU from '@/app/models/SKU';
 
 export async function GET() {
-  const movementsWithDetails = stockMovements.map(movement => {
-    const sku = skus.find(s => s.id === movement.sku_id);
-    return {
-      ...movement,
-      sku_name: sku?.name,
-      sku_code: sku?.sku_code,
-    };
-  }).sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
-  
-  return NextResponse.json(movementsWithDetails);
+  try {
+    await connectDB();
+    
+    const movements = await StockMovement.find({})
+      .populate('sku_id')
+      .sort({ created_at: -1 })
+      .limit(100);
+    
+    const movementsWithDetails = movements.map((movement: any) => ({
+      id: movement._id,
+      sku_id: movement.sku_id._id,
+      sku_name: movement.sku_id.name,
+      sku_code: movement.sku_id.sku_code,
+      type: movement.type,
+      quantity: movement.quantity,
+      reference: movement.reference,
+      notes: movement.notes,
+      location: movement.location,
+      created_at: movement.created_at,
+    }));
+    
+    return NextResponse.json(movementsWithDetails);
+  } catch (error) {
+    console.error('Error fetching movements:', error);
+    return NextResponse.json({ error: 'Failed to fetch movements' }, { status: 500 });
+  }
 }
 
 export async function POST(request: Request) {
-  const body = await request.json();
-  const { sku_id, type, quantity, reference, notes, location } = body;
-  
-  if (!sku_id || !type || !quantity || !location) {
-    return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
+  try {
+    await connectDB();
+    const body = await request.json();
+    const { sku_id, type, quantity, reference, notes, location } = body;
+    
+    if (!sku_id || !type || !quantity || !location) {
+      return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
+    }
+    
+    // Create movement record
+    const newMovement = await StockMovement.create({
+      sku_id,
+      type,
+      quantity: Number(quantity),
+      reference: reference || '',
+      notes: notes || '',
+      location,
+    });
+    
+    // Update inventory
+    const inventory = await Inventory.findOne({ sku_id, location });
+    
+    if (inventory) {
+      if (type === 'inward') {
+        inventory.quantity += Number(quantity);
+      } else if (type === 'outward' || type === 'damage') {
+        inventory.quantity -= Number(quantity);
+      }
+      inventory.last_updated = new Date();
+      await inventory.save();
+    } else {
+      // Create new inventory record
+      await Inventory.create({
+        sku_id,
+        location,
+        quantity: type === 'inward' ? Number(quantity) : -Number(quantity),
+      });
+    }
+    
+    return NextResponse.json(newMovement, { status: 201 });
+  } catch (error) {
+    console.error('Error creating movement:', error);
+    return NextResponse.json({ error: 'Failed to create movement' }, { status: 500 });
   }
-  
-  const newMovement = {
-    id: uuidv4(),
-    sku_id,
-    type,
-    quantity: Number(quantity),
-    reference: reference || '',
-    notes: notes || '',
-    location,
-    created_at: new Date().toISOString(),
-  };
-  
-  stockMovements.push(newMovement);
-  updateInventory(sku_id, location, Number(quantity), type);
-  
-  return NextResponse.json(newMovement, { status: 201 });
 }

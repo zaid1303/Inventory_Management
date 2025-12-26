@@ -1,20 +1,36 @@
-import { inventory, skus } from '../db';
 import { NextResponse } from 'next/server';
+import connectDB from '@/app/lib/mongodb';
+import Inventory from '@/app/models/Inventory';
+import SKU from '@/app/models/SKU';
 
 export async function GET() {
-  const inventoryWithDetails = inventory.map(inv => {
-    const sku = skus.find(s => s.id === inv.sku_id);
-    return {
-      ...inv,
-      sku_name: sku?.name,
-      sku_code: sku?.sku_code,
-      category: sku?.category,
-      unit: sku?.unit,
-      reorder_level: sku?.reorder_level,
-      unit_price: sku?.unit_price,
-      value: (sku?.unit_price || 0) * inv.quantity,
-      status: inv.quantity <= (sku?.reorder_level || 0) ? 'low' : 'ok',
-    };
-  });
-  return NextResponse.json(inventoryWithDetails);
+  try {
+    await connectDB();
+    
+    const inventoryItems = await Inventory.find({}).populate('sku_id');
+    
+    const inventoryWithDetails = inventoryItems.map((inv: any) => {
+      const sku = inv.sku_id;
+      return {
+        _id: inv._id,
+        sku_id: sku._id,
+        sku_name: sku.name,
+        sku_code: sku.sku_code,
+        category: sku.category,
+        location: inv.location,
+        quantity: inv.quantity,
+        unit: sku.unit,
+        reorder_level: sku.reorder_level,
+        unit_price: sku.unit_price,
+        value: sku.unit_price * inv.quantity,
+        status: inv.quantity <= sku.reorder_level ? 'low' : 'ok',
+        last_updated: inv.last_updated,
+      };
+    });
+    
+    return NextResponse.json(inventoryWithDetails);
+  } catch (error) {
+    console.error('Error fetching inventory:', error);
+    return NextResponse.json({ error: 'Failed to fetch inventory' }, { status: 500 });
+  }
 }
