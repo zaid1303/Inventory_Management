@@ -28,7 +28,6 @@ export interface Inventory {
   last_updated: string;
 }
 
-// In-memory storage
 export const skus: SKU[] = [
   {
     id: '1',
@@ -63,14 +62,59 @@ export const skus: SKU[] = [
     location: 'Warehouse-B',
     created_at: new Date().toISOString(),
   },
+  {
+    id: '4',
+    name: 'Cement Paint White 20L',
+    sku_code: 'CP-WHT-20L',
+    category: 'Paint',
+    unit: 'Bucket',
+    reorder_level: 20,
+    unit_price: 3500,
+    location: 'Warehouse-A',
+    created_at: new Date().toISOString(),
+  },
+  {
+    id: '5',
+    name: 'Steel Door Frame',
+    sku_code: 'SDF-STD',
+    category: 'Hardware',
+    unit: 'Piece',
+    reorder_level: 15,
+    unit_price: 2800,
+    location: 'Warehouse-C',
+    created_at: new Date().toISOString(),
+  },
 ];
 
-export const stockMovements: StockMovement[] = [];
+export const stockMovements: StockMovement[] = [
+  {
+    id: '1',
+    sku_id: '1',
+    type: 'inward',
+    quantity: 50,
+    reference: 'PO-2024-001',
+    notes: '',
+    location: 'Warehouse-A',
+    created_at: new Date(Date.now() - 86400000).toISOString(),
+  },
+  {
+    id: '2',
+    sku_id: '3',
+    type: 'outward',
+    quantity: 15,
+    reference: 'INV-2024-045',
+    notes: '',
+    location: 'Warehouse-B',
+    created_at: new Date(Date.now() - 172800000).toISOString(),
+  },
+];
 
 export const inventory: Inventory[] = [
   { sku_id: '1', location: 'Warehouse-A', quantity: 120, last_updated: new Date().toISOString() },
   { sku_id: '2', location: 'Warehouse-A', quantity: 850, last_updated: new Date().toISOString() },
   { sku_id: '3', location: 'Warehouse-B', quantity: 25, last_updated: new Date().toISOString() },
+  { sku_id: '4', location: 'Warehouse-A', quantity: 45, last_updated: new Date().toISOString()  },
+  { sku_id: '5', location: 'Warehouse-C', quantity: 12, last_updated: new Date().toISOString()  },
 ];
 
 export const updateInventory = (sku_id: string, location: string, quantity: number, type: string) => {

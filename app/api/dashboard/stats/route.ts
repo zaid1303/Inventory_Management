@@ -1,4 +1,5 @@
 import { skus, inventory, stockMovements } from '../../db';
+import { NextResponse } from 'next/server';
 
 export async function GET() {
   const totalSKUs = skus.length;
@@ -22,7 +23,7 @@ export async function GET() {
     return { category: cat, value: catValue, count: catSKUs.length };
   });
   
-  return Response.json({
+  return NextResponse.json({
     totalSKUs,
     totalValue,
     lowStockItems,

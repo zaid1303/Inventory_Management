@@ -1,8 +1,9 @@
 import { skus } from '../db';
 import { v4 as uuidv4 } from 'uuid';
+import { NextResponse } from 'next/server';
 
 export async function GET() {
-  return Response.json(skus);
+  return NextResponse.json(skus);
 }
 
 export async function POST(request: Request) {
@@ -10,8 +11,10 @@ export async function POST(request: Request) {
   const newSKU = {
     id: uuidv4(),
     ...body,
+    reorder_level: Number(body.reorder_level),
+    unit_price: Number(body.unit_price),
     created_at: new Date().toISOString(),
   };
   skus.push(newSKU);
-  return Response.json(newSKU, { status: 201 });
+  return NextResponse.json(newSKU, { status: 201 });
 }

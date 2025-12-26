@@ -1,5 +1,6 @@
 import { stockMovements, skus, updateInventory } from '../db';
 import { v4 as uuidv4 } from 'uuid';
+import { NextResponse } from 'next/server';
 
 export async function GET() {
   const movementsWithDetails = stockMovements.map(movement => {
@@ -11,7 +12,7 @@ export async function GET() {
     };
   }).sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
   
-  return Response.json(movementsWithDetails);
+  return NextResponse.json(movementsWithDetails);
 }
 
 export async function POST(request: Request) {
@@ -19,7 +20,7 @@ export async function POST(request: Request) {
   const { sku_id, type, quantity, reference, notes, location } = body;
   
   if (!sku_id || !type || !quantity || !location) {
-    return Response.json({ error: 'Missing required fields' }, { status: 400 });
+    return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
   }
   
   const newMovement = {
@@ -36,5 +37,5 @@ export async function POST(request: Request) {
   stockMovements.push(newMovement);
   updateInventory(sku_id, location, Number(quantity), type);
   
-  return Response.json(newMovement, { status: 201 });
+  return NextResponse.json(newMovement, { status: 201 });
 }

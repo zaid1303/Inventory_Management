@@ -1,4 +1,5 @@
 import { inventory, skus } from '../db';
+import { NextResponse } from 'next/server';
 
 export async function GET() {
   const inventoryWithDetails = inventory.map(inv => {
@@ -15,5 +16,5 @@ export async function GET() {
       status: inv.quantity <= (sku?.reorder_level || 0) ? 'low' : 'ok',
     };
   });
-  return Response.json(inventoryWithDetails);
+  return NextResponse.json(inventoryWithDetails);
 }

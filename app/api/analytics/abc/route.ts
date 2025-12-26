@@ -1,4 +1,5 @@
 import { inventory, skus } from '../../db';
+import { NextResponse } from 'next/server';
 
 export async function GET() {
   const inventoryWithValue = inventory.map(inv => {
@@ -33,5 +34,5 @@ export async function GET() {
     };
   });
   
-  return Response.json(abcAnalysis);
+  return NextResponse.json(abcAnalysis);
 }
