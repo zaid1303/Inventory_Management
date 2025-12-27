@@ -374,7 +374,7 @@ export default function InventoryDashboard() {
                 <h1 className="text-4xl font-bold tracking-tight">Inventory Management</h1>
                 <p className="text-blue-100 mt-1 flex items-center gap-2">
                   <Building2 className="w-4 h-4" />
-                  Zaid Business Solution
+                  AEC Business Solution
                 </p>
               </div>
             </div>
