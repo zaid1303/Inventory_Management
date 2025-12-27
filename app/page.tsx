@@ -140,13 +140,16 @@ export default function InventoryDashboard() {
     setLoading(true);
     setError(null);
     try {
+      const fetchOpts = { cache: 'no-store' as RequestCache };
+
       const [statsRes, invRes, skusRes, movRes, abcRes] = await Promise.all([
-        fetch('/api/dashboard/stats'),
-        fetch('/api/inventory'),
-        fetch('/api/skus'),
-        fetch('/api/movements'),
-        fetch('/api/analytics/abc')
+        fetch('/api/dashboard/stats', fetchOpts),
+        fetch('/api/inventory', fetchOpts),
+        fetch('/api/skus', fetchOpts),
+        fetch('/api/movements', fetchOpts),
+        fetch('/api/analytics/abc', fetchOpts)
       ]);
+
 
       if (!statsRes.ok || !invRes.ok || !skusRes.ok || !movRes.ok || !abcRes.ok) {
         throw new Error('Failed to fetch data. Make sure API routes are set up.');
