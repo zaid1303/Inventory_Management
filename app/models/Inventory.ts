@@ -1,6 +1,8 @@
 import mongoose, { Schema, model, models } from 'mongoose';
 import 'dotenv/config';
+import connectDB from '@/app/lib/mongodb';
 
+await connectDB();
 
 export interface IInventory {
   sku_id: mongoose.Types.ObjectId;

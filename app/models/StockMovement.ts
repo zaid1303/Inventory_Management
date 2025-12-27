@@ -1,6 +1,9 @@
 import mongoose, { Schema, model, models } from 'mongoose';
 import 'dotenv/config';
 
+import connectDB from '@/app/lib/mongodb';
+
+await connectDB();
 export interface IStockMovement {
   sku_id: mongoose.Types.ObjectId;
   type: 'inward' | 'outward' | 'transfer' | 'damage';
